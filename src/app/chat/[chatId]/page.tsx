@@ -2,67 +2,56 @@
 
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
-import { useRouter } from "next/navigation";
-import {
-  Box,
-  Input,
-  Button,
-  Container,
-  HStack,
-  AbsoluteCenter,
-} from "@chakra-ui/react";
+import { Box, Input, Button, Container, HStack } from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
+import { useSearchParams } from "next/navigation";
 
 type Message = {
   user: string;
   message: string;
 };
-
+// const socket = io();
 const ChatRoom = ({ params }: { params: { chatId: string } }) => {
-  const router = useRouter();
   const chatId = params.chatId;
-  const password = new URLSearchParams(window.location.search).get("password");
   const [user, setUser] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const searchParamas = useSearchParams();
+  const password = searchParamas?.get("password") || "";
   const socketRef = useRef<any>();
-
   useEffect(() => {
     if (!user) {
       return;
     }
-    fetch("api/socket").finally(() => {
-      socketRef.current = io();
-      console.log("socketRef.current:", socketRef.current);
-      socketRef.current.emit("joinRoom", { room: chatId, password });
+    socketRef.current = io();
+    socketRef.current.emit("joinRoom", { room: chatId, password });
 
-      socketRef.current.on("joinedRoom", () => {
-        console.log("Joined room:", chatId);
-      });
-
-      socketRef.current.on("error", (err: string) => {
-        console.error(err);
-      });
-
-      socketRef.current.on("loadMessages", (loadedMessages: Message[]) => {
-        console.log("Loaded messages:", loadedMessages);
-        setMessages(loadedMessages);
-      });
-
-      socketRef.current.on("message", (msg: Message) => {
-        console.log("Received message:", msg);
-        setMessages((prevMessages) => [...prevMessages, msg]);
-      });
-
-      return () => {
-        socketRef.current.disconnect();
-      };
+    socketRef.current.on("joinedRoom", () => {
+      console.log("Joined room:", chatId);
     });
+
+    socketRef.current.on("error", (err: string) => {
+      console.error(err);
+    });
+
+    socketRef.current.on("loadMessages", (loadedMessages: Message[]) => {
+      console.log("Loaded messages:", loadedMessages);
+      setMessages(loadedMessages);
+    });
+
+    socketRef.current.on("message", (msg: Message) => {
+      console.log("Received message:", msg);
+      setMessages((prevMessages) => [...prevMessages, msg]);
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
   }, [chatId, password, user]);
 
   const sendMessage = () => {
     if (message.trim() !== "") {
-      console.log("Sending message to socket:", socketRef.current);
+      console.log("Sending message to room:", chatId);
       socketRef.current.emit("message", { room: chatId, user, message });
 
       setMessage("");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -11,13 +11,24 @@ import {
   Input,
   AbsoluteCenter,
 } from "@chakra-ui/react";
+import { io } from "socket.io-client";
 
 const HomePage = () => {
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const socketRef = useRef<any>();
+
+  useEffect(() => {
+    socketRef.current = io();
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, []);
 
   const createChat = () => {
     const chatId = Math.random().toString(36).substring(7);
+    socketRef.current.emit("createRoom", { room: chatId, password });
+
     router.push(`/chat/${chatId}?password=${password}`);
   };
 
