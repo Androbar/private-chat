@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
-import { Box, Input, Button, Container, HStack } from "@chakra-ui/react";
+import {
+  Box,
+  Input,
+  Button,
+  Container,
+  HStack,
+  Flex,
+  Text,
+} from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
 import { useSearchParams } from "next/navigation";
 
@@ -10,7 +18,7 @@ type Message = {
   user: string;
   message: string;
 };
-// const socket = io();
+
 const ChatRoom = ({ params }: { params: { chatId: string } }) => {
   const chatId = params.chatId;
   const [user, setUser] = useState<string>("");
@@ -66,9 +74,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
       <Box border={"1px solid #ccc"} borderRadius={"md"} p={4} h={"100%"}>
         <Box overflowY={"scroll"} h={"90%"}>
           {messages.map((msg, index) => (
-            <Box key={index}>
-              {msg.user}: {msg.message}
-            </Box>
+            <ChatMessage key={index} message={msg} user={user} />
           ))}
         </Box>
         <HStack h={"100px"} spacing={4} mt={4}>
@@ -81,3 +87,25 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
 };
 
 export default ChatRoom;
+
+function ChatMessage({ message, user }: { message: Message; user: string }) {
+  const align = message.user === user ? "flex-end" : "flex-start";
+  return (
+    <Flex direction="column" mb={2} alignItems={align}>
+      <Box px={3}>
+        <Text fontSize={"sm"}>{message.user}</Text>
+      </Box>
+      <Box
+        border={"1px solid #ccc"}
+        borderRadius={20}
+        py={1}
+        px={3}
+        w={"fit-content"}
+        m={1}
+        bg={message.user === user ? "#ccc" : "#eee"}
+      >
+        <Text fontSize={"lg"}>{message.message}</Text>
+      </Box>
+    </Flex>
+  );
+}
