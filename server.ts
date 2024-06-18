@@ -25,15 +25,21 @@ app.prepare().then(() => {
       socket.emit('roomCreated', room);
     });
 
-    socket.on("joinRoom", async ({ room, password }) => {
+    socket.on("joinRoom", async ({ room, password, user }) => {
       const storedPassword = await redis.get(`room:${room}:password`);
       if (storedPassword === password) {
         socket.join(room);
+        await redis.sadd(`room:${room}:users`, user);
         socket.emit("joinedRoom", room);
+        socket.to(room).emit('userJoined', user);
+
         const messages = await redis.lrange(`room:${room}:messages`, 0, -1);
         const loadMessages = messages.map(message => JSON.parse(message));
 
         socket.emit('loadMessages', loadMessages);
+
+        const users = await redis.smembers(`room:${room}:users`);
+        io.to(room).emit('updateUserList', users);
       } else {
         socket.emit("error", "Invalid password");
       }
@@ -45,8 +51,19 @@ app.prepare().then(() => {
       io.to(room).emit("message", messageObject);
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log("A user disconnected:", socket.id);
+      // Remove user from all rooms they were part of
+      const rooms = Array.from(socket.rooms);
+      for (const room of rooms) {
+        await redis.srem(`room:${room}:users`, socket.id);
+
+        // Notify others in the room
+        socket.to(room).emit('userDisconnected', socket.id);
+
+        const users = await redis.smembers(`room:${room}:users`);
+        io.to(room).emit('updateUserList', users);
+      }
     });
   });
 
