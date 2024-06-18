@@ -10,6 +10,7 @@ import {
   HStack,
   Flex,
   Text,
+  AbsoluteCenter,
 } from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
 import { useSearchParams } from "next/navigation";
@@ -24,22 +25,32 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
   const [user, setUser] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const searchParamas = useSearchParams();
   const password = searchParamas?.get("password") || "";
   const socketRef = useRef<any>();
+
+  useEffect(() => {
+    if (!socketRef.current) {
+      socketRef.current = io();
+    }
+    socketRef.current.on("error", (err: string) => {
+      console.log("error", error);
+      setError(err);
+    });
+  }, [error]);
+
   useEffect(() => {
     if (!user) {
       return;
     }
-    socketRef.current = io();
+    if (!socketRef.current) {
+      socketRef.current = io();
+    }
     socketRef.current.emit("joinRoom", { room: chatId, password });
 
     socketRef.current.on("joinedRoom", () => {
       console.log("Joined room:", chatId);
-    });
-
-    socketRef.current.on("error", (err: string) => {
-      console.error(err);
     });
 
     socketRef.current.on("loadMessages", (loadedMessages: Message[]) => {
@@ -65,6 +76,21 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
       setMessage("");
     }
   };
+
+  if (error) {
+    return (
+      <Box w={"100%"} h={"100vh"}>
+        <AbsoluteCenter
+          p={20}
+          border={"1px solid red.300"}
+          borderRadius={"md"}
+          bgColor={"red.100"}
+        >
+          {error}
+        </AbsoluteCenter>
+      </Box>
+    );
+  }
   if (!user) {
     return <UserInput setUser={setUser} />;
   }
