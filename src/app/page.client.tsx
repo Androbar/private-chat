@@ -12,6 +12,7 @@ import {
   AbsoluteCenter,
 } from "@chakra-ui/react";
 import { io } from "socket.io-client";
+import { EVENTS } from "@/constants";
 
 const HomePage = () => {
   const [password, setPassword] = useState("");
@@ -27,7 +28,7 @@ const HomePage = () => {
 
   const createChat = () => {
     const chatId = Math.random().toString(36).substring(7);
-    socketRef.current.emit("createRoom", { room: chatId, password });
+    socketRef.current.emit(EVENTS.CREATE_ROOM, { room: chatId, password });
 
     router.push(`/chat/${chatId}?password=${password}`);
   };

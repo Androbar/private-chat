@@ -4,6 +4,7 @@ import next from 'next';
 import express from 'express';
 import { Server } from "socket.io";
 import Redis from 'ioredis';
+import { EVENTS } from './src/constants';
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -20,46 +21,46 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on('createRoom', async ({ room, password }) => {
+    socket.on(EVENTS.CREATE_ROOM, async ({ room, password }) => {
       await redis.set(`room:${room}:password`, password);
-      socket.emit('roomCreated', room);
+      socket.emit(EVENTS.ROOM_CREATED, room);
     });
 
-    socket.on("joinRoom", async ({ room, password, user }) => {
+    socket.on(EVENTS.JOIN_ROOM, async ({ room, password, user }) => {
       const storedPassword = await redis.get(`room:${room}:password`);
       if (storedPassword === password) {
         socket.join(room);
         await redis.sadd(`room:${room}:users`, user);
-        socket.emit("joinedRoom", room);
-        socket.to(room).emit('userJoined', user);
+        socket.emit(EVENTS.JOINED_ROOM, room);
+        socket.to(room).emit(EVENTS.USER_JOINED, user);
 
         const messages = await redis.lrange(`room:${room}:messages`, 0, -1);
         const loadMessages = messages.map(message => JSON.parse(message));
 
-        socket.emit('loadMessages', loadMessages);
+        socket.emit(EVENTS.LOAD_MESSAGES, loadMessages);
 
         const users = await redis.smembers(`room:${room}:users`);
-        io.to(room).emit('updateUserList', users);
+        io.to(room).emit(EVENTS.UPDATE_USER_LIST, users);
       } else {
-        socket.emit("error", "Invalid password");
+        socket.emit(EVENTS.ERROR, "Invalid password");
       }
     });
 
     // Listen typing events
-    socket.on("startTyping", (data) => {
-      io.to(data.room).emit("startTyping", data);
+    socket.on(EVENTS.START_TYPING, (data) => {
+      io.to(data.room).emit(EVENTS.START_TYPING, data);
     });
-    socket.on("stopTyping", (data) => {
-      io.to(data.room).emit("stopTyping", data);
+    socket.on(EVENTS.STOP_TYPING, (data) => {
+      io.to(data.room).emit(EVENTS.STOP_TYPING, data);
     });
 
-    socket.on("message", async ({ room, user, message }) => {
+    socket.on(EVENTS.MESSAGE, async ({ room, user, message }) => {
       const messageObject = { user, message };
       await redis.rpush(`room:${room}:messages`, JSON.stringify(messageObject));
-      io.to(room).emit("message", messageObject);
+      io.to(room).emit(EVENTS.MESSAGE, messageObject);
     });
 
-    socket.on("disconnect", async () => {
+    socket.on(EVENTS.DISCONNECT, async () => {
       console.log("A user disconnected:", socket.id);
       // Remove user from all rooms they were part of
       const rooms = Array.from(socket.rooms);
@@ -67,10 +68,10 @@ app.prepare().then(() => {
         await redis.srem(`room:${room}:users`, socket.id);
 
         // Notify others in the room
-        socket.to(room).emit('userDisconnected', socket.id);
+        socket.to(room).emit(EVENTS.USER_DISCONNECTED, socket.id);
 
         const users = await redis.smembers(`room:${room}:users`);
-        io.to(room).emit('updateUserList', users);
+        io.to(room).emit(EVENTS.UPDATE_USER_LIST, users);
       }
     });
   });

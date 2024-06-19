@@ -14,12 +14,12 @@ import {
   Grid,
   GridItem,
   Heading,
-  keyframes,
 } from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
 import { useSearchParams } from "next/navigation";
 import useIsTyping from "@/components/useIsTyping";
 import { TypingIndicator } from "@/components/TypingIndicator";
+import { EVENTS } from "@/constants";
 
 type Message = {
   user: string;
@@ -43,7 +43,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
     if (!socketRef.current) {
       socketRef.current = io();
     }
-    socketRef.current.on("error", (err: string) => {
+    socketRef.current.on(EVENTS.ERROR, (err: string) => {
       console.log("error", error);
       setError(err);
     });
@@ -56,29 +56,29 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
     if (!socketRef.current) {
       socketRef.current = io();
     }
-    socketRef.current.emit("joinRoom", { room: chatId, password, user });
+    socketRef.current.emit(EVENTS.JOIN_ROOM, { room: chatId, password, user });
 
-    socketRef.current.on("joinedRoom", () => {
+    socketRef.current.on(EVENTS.JOINED_ROOM, () => {
       console.log("Joined room:", chatId);
     });
 
-    socketRef.current.on("loadMessages", (loadedMessages: Message[]) => {
+    socketRef.current.on(EVENTS.LOAD_MESSAGES, (loadedMessages: Message[]) => {
       console.log("Loaded messages:", loadedMessages);
       setMessages(loadedMessages);
     });
 
-    socketRef.current.on("message", (msg: Message) => {
+    socketRef.current.on(EVENTS.MESSAGE, (msg: Message) => {
       console.log("Received message:", msg);
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
 
-    socketRef.current.on("updateUserList", (users: string[]) => {
+    socketRef.current.on(EVENTS.UPDATE_USER_LIST, (users: string[]) => {
       console.log("User joined:", users);
       setUsers(users);
     });
 
     socketRef.current.on(
-      "startTyping",
+      EVENTS.START_TYPING,
       (typingInfo: { user: string; room: string; senderId: string }) => {
         setTypingUsers((typingUsers) => [...typingUsers, typingInfo.user]);
         // if (typingInfo.senderId !== socketRef.current.id) {
@@ -87,7 +87,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
     );
 
     socketRef.current.on(
-      "stopTyping",
+      EVENTS.STOP_TYPING,
       (typingInfo: { user: string; room: string; senderId: string }) => {
         setTypingUsers((prevTypingUsers) => {
           return prevTypingUsers.filter((u) => u !== typingInfo.user);
@@ -104,7 +104,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
 
   const startTypingMessage = useCallback(() => {
     if (!socketRef.current) return;
-    socketRef.current.emit("startTyping", {
+    socketRef.current.emit(EVENTS.START_TYPING, {
       room: chatId,
       senderId: socketRef.current.id,
       user,
@@ -113,7 +113,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
 
   const stopTypingMessage = useCallback(() => {
     if (!socketRef.current) return;
-    socketRef.current.emit("stopTyping", {
+    socketRef.current.emit(EVENTS.STOP_TYPING, {
       room: chatId,
       senderId: socketRef.current.id,
       user,
@@ -127,7 +127,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
 
   const sendMessage = () => {
     if (message.trim() !== "") {
-      socketRef.current.emit("message", { room: chatId, user, message });
+      socketRef.current.emit(EVENTS.MESSAGE, { room: chatId, user, message });
       cancelTyping();
       setMessage("");
     }
