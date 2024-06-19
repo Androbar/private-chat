@@ -154,7 +154,7 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
   return (
     <Container maxW="container.xl" h={"100vh"} p={4}>
       <Grid gridTemplateColumns={"repeat(12, 1fr)"} columnGap={4} h={"100%"}>
-        <GridItem colSpan={8}>
+        <GridItem colSpan={8} maxH={"calc(100vh - 20px)"}>
           <Box border={"1px solid #ccc"} borderRadius={"md"} p={4} h={"100%"}>
             <Box overflowY={"scroll"} h={"90%"}>
               {messages.map((msg, index) => (
