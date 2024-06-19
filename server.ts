@@ -45,6 +45,14 @@ app.prepare().then(() => {
       }
     });
 
+    // Listen typing events
+    socket.on("startTyping", (data) => {
+      io.to(data.room).emit("startTyping", data);
+    });
+    socket.on("stopTyping", (data) => {
+      io.to(data.room).emit("stopTyping", data);
+    });
+
     socket.on("message", async ({ room, user, message }) => {
       const messageObject = { user, message };
       await redis.rpush(`room:${room}:messages`, JSON.stringify(messageObject));

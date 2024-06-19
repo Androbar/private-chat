@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import {
   Box,
@@ -14,9 +14,12 @@ import {
   Grid,
   GridItem,
   Heading,
+  keyframes,
 } from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
 import { useSearchParams } from "next/navigation";
+import useIsTyping from "@/components/useIsTyping";
+import { TypingIndicator } from "@/components/TypingIndicator";
 
 type Message = {
   user: string;
@@ -27,12 +30,14 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
   const chatId = params.chatId;
   const [user, setUser] = useState<string>("");
   const [users, setUsers] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
   const searchParamas = useSearchParams();
   const password = searchParamas?.get("password") || "";
   const socketRef = useRef<any>();
+  const { isTyping, startTyping, stopTyping, cancelTyping } = useIsTyping();
 
   useEffect(() => {
     if (!socketRef.current) {
@@ -72,16 +77,58 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
       setUsers(users);
     });
 
+    socketRef.current.on(
+      "startTyping",
+      (typingInfo: { user: string; room: string; senderId: string }) => {
+        setTypingUsers((typingUsers) => [...typingUsers, typingInfo.user]);
+        // if (typingInfo.senderId !== socketRef.current.id) {
+        // }
+      }
+    );
+
+    socketRef.current.on(
+      "stopTyping",
+      (typingInfo: { user: string; room: string; senderId: string }) => {
+        setTypingUsers((prevTypingUsers) => {
+          return prevTypingUsers.filter((u) => u !== typingInfo.user);
+        });
+        // if (typingInfo.senderId !== socketRef.current.id) {
+        // }
+      }
+    );
+
     return () => {
       socketRef.current.disconnect();
     };
   }, [chatId, password, user]);
 
+  const startTypingMessage = useCallback(() => {
+    if (!socketRef.current) return;
+    socketRef.current.emit("startTyping", {
+      room: chatId,
+      senderId: socketRef.current.id,
+      user,
+    });
+  }, [chatId, user]);
+
+  const stopTypingMessage = useCallback(() => {
+    if (!socketRef.current) return;
+    socketRef.current.emit("stopTyping", {
+      room: chatId,
+      senderId: socketRef.current.id,
+      user,
+    });
+  }, [chatId, user]);
+
+  useEffect(() => {
+    if (isTyping) startTypingMessage();
+    else stopTypingMessage();
+  }, [isTyping, startTypingMessage, stopTypingMessage]);
+
   const sendMessage = () => {
     if (message.trim() !== "") {
-      console.log("Sending message to room:", chatId);
       socketRef.current.emit("message", { room: chatId, user, message });
-
+      cancelTyping();
       setMessage("");
     }
   };
@@ -118,6 +165,8 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={startTyping}
+                onKeyUp={stopTyping}
               />
               <Button onClick={sendMessage}>Send</Button>
             </HStack>
@@ -126,9 +175,10 @@ const ChatRoom = ({ params }: { params: { chatId: string } }) => {
         <GridItem colSpan={4}>
           <Heading as={"h4"}>Users</Heading>
           {users.map((user, index) => (
-            <Box key={index}>
+            <HStack key={index}>
               <Text>{user}</Text>
-            </Box>
+              {typingUsers.includes(user) && <TypingIndicator />}
+            </HStack>
           ))}
         </GridItem>
       </Grid>
