@@ -6,9 +6,25 @@ import {
   Input,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import Cookies from "js-cookie";
 
-export function UserInput({ setUser }: { setUser: (user: string) => void }) {
-  const [name, setName] = useState<string>("");
+export function UserInput({
+  userName = "",
+  setUser,
+}: {
+  userName: string | undefined;
+  setUser: (user: string) => void;
+}) {
+  const [name, setName] = useState<string>(userName);
+
+  const handleSetUser = () => {
+    const cleanedName = name.trim();
+    if (cleanedName !== "") {
+      // set cookie
+      Cookies.set("userName", cleanedName);
+      setUser(cleanedName);
+    }
+  };
   return (
     <Container maxW="container.xl" h={"100vh"} p={4}>
       <AbsoluteCenter>
@@ -29,14 +45,7 @@ export function UserInput({ setUser }: { setUser: (user: string) => void }) {
               color: "gray.500",
             }}
           />
-          <Button
-            w={"100%"}
-            onClick={() => {
-              if (name.trim() !== "") {
-                setUser(name.trim());
-              }
-            }}
-          >
+          <Button w={"100%"} onClick={() => handleSetUser()}>
             Join
           </Button>
         </Box>
