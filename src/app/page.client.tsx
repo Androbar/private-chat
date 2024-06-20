@@ -20,6 +20,7 @@ const HomePage = () => {
   const [passwordError, setPasswordError] = useState("");
   const [user, setUser] = useState("");
   const [userError, setUserError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const socketRef = useRef<any>();
 
@@ -40,6 +41,7 @@ const HomePage = () => {
     if (!user || !password) {
       return;
     }
+    setIsLoading(true);
     const chatId = Math.random().toString(36).substring(7);
     socketRef.current.emit(EVENTS.CREATE_ROOM, { room: chatId, password });
     Cookies.set("userName", user);
@@ -75,6 +77,7 @@ const HomePage = () => {
             }}
             onKeyDown={handleKeydown}
             m={3}
+            disabled={isLoading}
           />
           {userError && (
             <Text mx={3} color="red.500">
@@ -90,6 +93,7 @@ const HomePage = () => {
             }}
             onKeyDown={handleKeydown}
             m={3}
+            disabled={isLoading}
           />
           {passwordError && (
             <Text mx={3} color="red.500">
@@ -97,7 +101,13 @@ const HomePage = () => {
             </Text>
           )}
 
-          <Button onClick={createChat} m={3} w={"100%"}>
+          <Button
+            onClick={createChat}
+            m={3}
+            w={"100%"}
+            disabled={isLoading}
+            isLoading={isLoading}
+          >
             Create Chat
           </Button>
         </Box>

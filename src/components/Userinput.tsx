@@ -25,6 +25,7 @@ export function UserInput({
   const [nameError, setNameError] = useState<string>(userName);
   const [password, setPassword] = useState<string>(userName);
   const [passwordError, setPasswordError] = useState<string>(userName);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSetUser = async () => {
     if (!password) {
@@ -36,6 +37,7 @@ export function UserInput({
     if (!name || !password) {
       return;
     }
+    setIsLoading(true);
     const response = await fetch(`/api/${room}/verify-password`, {
       method: "POST",
       headers: {
@@ -47,12 +49,14 @@ export function UserInput({
 
     if (verified.status !== 200) {
       setPasswordError(verified.body.error);
+      setIsLoading(false);
       return;
     }
     const cleanedName = name.trim();
     if (cleanedName !== "") {
       // set cookie
       Cookies.set("userName", cleanedName);
+      setIsLoading(false);
       setUser({ name: cleanedName, socketId });
     }
   };
@@ -78,6 +82,7 @@ export function UserInput({
             type="text"
             w={"100%"}
             mb={4}
+            disabled={isLoading}
             borderRadius={"md"}
             border={"1px solid #ccc"}
             _focus={{
@@ -101,13 +106,19 @@ export function UserInput({
             }}
             onKeyDown={handleKeydown}
             m={3}
+            disabled={isLoading}
           />
           {passwordError && (
             <Text mx={3} color="red.500">
               {passwordError}
             </Text>
           )}
-          <Button w={"100%"} onClick={() => handleSetUser()}>
+          <Button
+            w={"100%"}
+            disabled={isLoading}
+            isLoading={isLoading}
+            onClick={() => handleSetUser()}
+          >
             Join
           </Button>
         </Box>
