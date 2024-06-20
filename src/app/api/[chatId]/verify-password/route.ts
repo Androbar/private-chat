@@ -6,12 +6,8 @@ const redis = new Redis();
 export const POST = async (request: Request, { params }: { params: { chatId: string } }) => {
   const { chatId } = params;
   const storedPassword = await redis.get(`room:${chatId}:password`);
-  console.log('storedPassword: ', storedPassword)
-  // console.log('request.body: ', await request.json())
   const { password } = await request.json()
-  console.log('request.body.password: ',password)
   if (!password) {
-    console.log("password is required")
     return Response.json({
       status: 401,
       body: {
@@ -20,7 +16,6 @@ export const POST = async (request: Request, { params }: { params: { chatId: str
     });
   }
   if (!storedPassword) {
-    console.log("room not found")
     return Response.json({
       status: 401,
       body: {
@@ -29,7 +24,6 @@ export const POST = async (request: Request, { params }: { params: { chatId: str
     });
   }
   if (storedPassword!== password) {
-    console.log("incorrect password")
     return Response.json({
       status: 401,
       body: {

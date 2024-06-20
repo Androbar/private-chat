@@ -20,8 +20,6 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
-
     socket.on(EVENTS.CREATE_ROOM, async ({ room, password }: SocketEvents["CREATE_ROOM"]) => {
       await redis.set(`room:${room}:password`, password);
       socket.emit(EVENTS.ROOM_CREATED, room);
@@ -61,7 +59,6 @@ app.prepare().then(() => {
     socket.on("disconnecting", async() => {
       const rooms = Array.from(socket.rooms);
       for (const room of rooms) {
-        console.log("A user is disconnecting from room:", room);
         const usersJson = await redis.smembers(`room:${room}:users`);
 
         if (usersJson) {

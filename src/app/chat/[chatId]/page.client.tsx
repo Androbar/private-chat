@@ -55,7 +55,6 @@ export const ChatRoom = ({
       socketRef.current = io();
     }
     socketRef.current.on(EVENTS.ERROR, (err: string) => {
-      console.log("error", error);
       setError(err);
     });
   }, [error]);
@@ -73,17 +72,14 @@ export const ChatRoom = ({
     });
 
     socketRef.current.on(EVENTS.LOAD_MESSAGES, (loadedMessages: Message[]) => {
-      console.log("Loaded messages:", loadedMessages);
       setMessages(loadedMessages);
     });
 
     socketRef.current.on(EVENTS.MESSAGE, (msg: Message) => {
-      console.log("Received message:", msg);
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
 
     socketRef.current.on(EVENTS.UPDATE_USER_LIST, (users: User[]) => {
-      console.log("User joined:", users);
       setUsers(users);
     });
 
