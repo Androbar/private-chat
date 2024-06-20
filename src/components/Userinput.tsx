@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Container,
+  Heading,
   Input,
   Text,
 } from "@chakra-ui/react";
@@ -69,28 +70,26 @@ export function UserInput({
 
   return (
     <Container maxW="container.xl" h={"100vh"} p={4}>
-      <AbsoluteCenter>
+      <AbsoluteCenter p={10} border="1px solid #ccc" borderRadius="md">
+        <Heading as="h1" textAlign={"center"} mb={5}>
+          Private Chat
+        </Heading>
         <Box>
+          <Text textAlign={"center"} fontSize={"lg"}>
+            Enter your desired username and your password to enter the chat
+          </Text>
+        </Box>
+        <Box maxW={"sm"} mx="auto" mt={5}>
           <Input
+            placeholder="Enter your name"
             value={name}
             onChange={(e) => {
               setName(e.target.value);
               setNameError("");
             }}
             onKeyDown={handleKeydown}
-            placeholder="Enter your name"
-            type="text"
-            w={"100%"}
-            mb={4}
+            m={3}
             disabled={isLoading}
-            borderRadius={"md"}
-            border={"1px solid #ccc"}
-            _focus={{
-              borderColor: "brand.500",
-            }}
-            _placeholder={{
-              color: "gray.500",
-            }}
           />
           {nameError && (
             <Text mx={3} color="red.500">
@@ -115,6 +114,7 @@ export function UserInput({
           )}
           <Button
             w={"100%"}
+            m={3}
             disabled={isLoading}
             isLoading={isLoading}
             onClick={() => handleSetUser()}
