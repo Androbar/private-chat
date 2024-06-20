@@ -52,6 +52,7 @@ app.prepare().then(() => {
     socket.on(EVENTS.START_TYPING, (data) => {
       io.to(data.room).emit(EVENTS.START_TYPING, data);
     });
+
     socket.on(EVENTS.STOP_TYPING, (data) => {
       io.to(data.room).emit(EVENTS.STOP_TYPING, data);
     });

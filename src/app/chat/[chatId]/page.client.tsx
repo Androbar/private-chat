@@ -31,7 +31,7 @@ export const ChatRoom = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<User[]>([]);
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export const ChatRoom = ({
 
     socketRef.current.on(
       EVENTS.START_TYPING,
-      (typingInfo: { user: string; room: string; senderId: string }) => {
+      (typingInfo: { user: User; room: string; senderId: string }) => {
         setTypingUsers((typingUsers) => [...typingUsers, typingInfo.user]);
         // if (typingInfo.senderId !== socketRef.current.id) {
         // }
@@ -88,7 +88,7 @@ export const ChatRoom = ({
 
     socketRef.current.on(
       EVENTS.STOP_TYPING,
-      (typingInfo: { user: string; room: string; senderId: string }) => {
+      (typingInfo: { user: User; room: string; senderId: string }) => {
         setTypingUsers((prevTypingUsers) => {
           return prevTypingUsers.filter((u) => u !== typingInfo.user);
         });
@@ -187,7 +187,9 @@ export const ChatRoom = ({
           {users.map((user, index) => (
             <HStack key={index}>
               <Text>{user.name}</Text>
-              {typingUsers.includes(user.name) && <TypingIndicator />}
+              {typingUsers.some(
+                (tUser) => tUser.socketId === user.socketId
+              ) && <TypingIndicator />}
             </HStack>
           ))}
         </GridItem>
