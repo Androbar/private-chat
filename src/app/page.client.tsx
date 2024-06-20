@@ -33,6 +33,12 @@ const HomePage = () => {
     router.push(`/chat/${chatId}?password=${password}`);
   };
 
+  const handleKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      createChat();
+    }
+  };
+
   return (
     <Container maxW="6xl" p={4} height={"100vh"}>
       <AbsoluteCenter p={10} border="1px solid #ccc" borderRadius="md">
@@ -50,6 +56,7 @@ const HomePage = () => {
             placeholder="Enter chat password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeydown}
             m={3}
           />
           <Button onClick={createChat} m={3} w={"100%"}>

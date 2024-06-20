@@ -28,6 +28,13 @@ export function UserInput({
       setUser({ name: cleanedName, socketId });
     }
   };
+
+  const handleKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSetUser();
+    }
+  };
+
   return (
     <Container maxW="container.xl" h={"100vh"} p={4}>
       <AbsoluteCenter>
@@ -35,6 +42,7 @@ export function UserInput({
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={handleKeydown}
             placeholder="Enter your name"
             type="text"
             w={"100%"}

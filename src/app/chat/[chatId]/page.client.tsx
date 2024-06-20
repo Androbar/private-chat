@@ -126,6 +126,14 @@ export const ChatRoom = ({
     });
   }, [chatId, user]);
 
+  const handleKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      sendMessage();
+    } else {
+      startTyping();
+    }
+  };
+
   useEffect(() => {
     if (isTyping) startTypingMessage();
     else stopTypingMessage();
@@ -178,7 +186,7 @@ export const ChatRoom = ({
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={startTyping}
+                onKeyDown={handleKeydown}
                 onKeyUp={stopTyping}
               />
               <Button onClick={sendMessage}>Send</Button>
