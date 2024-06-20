@@ -14,5 +14,3 @@ export const EVENTS = {
   UPDATE_USER_LIST: "updateUserList",
   ERROR: "error",
 } as const;
-
-export const SECRET_KEY = process.env.SECRET_KEY || "add-a-secret-key-please";

@@ -1,5 +1,4 @@
 import Redis from "ioredis";
-import { NextApiRequest } from "next";
 
 const redis = new Redis();
 
