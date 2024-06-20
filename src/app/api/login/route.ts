@@ -1,9 +1,21 @@
 import { encrypt, getKey } from '@/utils/encryption';
+import { verifyRecaptcha } from '@/utils/verifyRecaptcha';
 import { cookies } from 'next/headers'
 
 export const POST = async (request: Request) => {
-  const { password } = await request.json()
+  const { password, token } = await request.json()
   const appPassword = process.env.AUTH_PASSWORD;
+
+  const isHuman = await verifyRecaptcha(token);
+  if (!isHuman) {
+    return Response.json({
+      status: 400,
+      body: {
+        error: "reCAPTCHA verification failed",
+      },
+    });
+  }
+
   if (!password) {
     return Response.json({
       status: 401,

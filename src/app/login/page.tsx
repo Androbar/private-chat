@@ -10,16 +10,30 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
+import {
+  GoogleReCaptchaProvider,
+  useGoogleReCaptcha,
+} from "react-google-recaptcha-v3";
 
-const LoginPage = () => {
+const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState<null | string>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!executeRecaptcha) {
+      setPasswordError("Execute recaptcha not yet available");
+      setIsLoading(false);
+      return;
+    }
+
+    const token = await executeRecaptcha("login");
+
     if (!password) {
       setPasswordError("Password is required");
       setIsLoading(false);
@@ -29,7 +43,7 @@ const LoginPage = () => {
     const response = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password, token }),
     });
 
     const verified = await response.json();
@@ -78,6 +92,16 @@ const LoginPage = () => {
         </form>
       </AbsoluteCenter>
     </Box>
+  );
+};
+
+const LoginPage = () => {
+  return (
+    <GoogleReCaptchaProvider
+      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+    >
+      <LoginForm />
+    </GoogleReCaptchaProvider>
   );
 };
 
