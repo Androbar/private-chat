@@ -21,7 +21,7 @@ import { useSearchParams } from "next/navigation";
 import useIsTyping from "@/components/useIsTyping";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { EVENTS } from "@/constants";
-import { Message, User } from "@/types";
+import { Message, SocketEvents, User } from "@/types";
 import { ChatMessage } from "@/components/ChatMessage";
 
 export const ChatRoom = ({
@@ -89,7 +89,7 @@ export const ChatRoom = ({
 
     socketRef.current.on(
       EVENTS.START_TYPING,
-      (typingInfo: { user: User; room: string; senderId: string }) => {
+      (typingInfo: SocketEvents["START_TYPING"]) => {
         setTypingUsers((typingUsers) => [...typingUsers, typingInfo.user]);
         // if (typingInfo.senderId !== socketRef.current.id) {
         // }
@@ -98,7 +98,7 @@ export const ChatRoom = ({
 
     socketRef.current.on(
       EVENTS.STOP_TYPING,
-      (typingInfo: { user: User; room: string; senderId: string }) => {
+      (typingInfo: SocketEvents["STOP_TYPING"]) => {
         setTypingUsers((prevTypingUsers) => {
           return prevTypingUsers.filter(
             (tUser) => tUser.socketId !== typingInfo.user.socketId

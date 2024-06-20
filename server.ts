@@ -5,7 +5,7 @@ import express from 'express';
 import { Server } from "socket.io";
 import Redis from 'ioredis';
 import { EVENTS } from './src/constants';
-import { User } from '@/types';
+import { SocketEvents, User } from '@/types';
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -22,12 +22,12 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on(EVENTS.CREATE_ROOM, async ({ room, password }) => {
+    socket.on(EVENTS.CREATE_ROOM, async ({ room, password }: SocketEvents["CREATE_ROOM"]) => {
       await redis.set(`room:${room}:password`, password);
       socket.emit(EVENTS.ROOM_CREATED, room);
     });
 
-    socket.on(EVENTS.JOIN_ROOM, async ({ room, password, user }) => {
+    socket.on(EVENTS.JOIN_ROOM, async ({ room, user }: SocketEvents["JOIN_ROOM"]) => {
       socket.join(room);
       await redis.sadd(`room:${room}:users`, JSON.stringify(user));
       socket.emit(EVENTS.JOINED_ROOM, room);
@@ -44,15 +44,15 @@ app.prepare().then(() => {
     });
 
     // Listen typing events
-    socket.on(EVENTS.START_TYPING, (data) => {
+    socket.on(EVENTS.START_TYPING, (data: SocketEvents["START_TYPING"]) => {
       io.to(data.room).emit(EVENTS.START_TYPING, data);
     });
 
-    socket.on(EVENTS.STOP_TYPING, (data) => {
+    socket.on(EVENTS.STOP_TYPING, (data: SocketEvents["STOP_TYPING"]) => {
       io.to(data.room).emit(EVENTS.STOP_TYPING, data);
     });
 
-    socket.on(EVENTS.MESSAGE, async ({ room, user, message }) => {
+    socket.on(EVENTS.MESSAGE, async ({ room, user, message }: SocketEvents["MESSAGE"]) => {
       const messageObject = { user, message };
       await redis.rpush(`room:${room}:messages`, JSON.stringify(messageObject));
       io.to(room).emit(EVENTS.MESSAGE, messageObject);
