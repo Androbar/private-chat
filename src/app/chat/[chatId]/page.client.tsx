@@ -41,6 +41,8 @@ export const ChatRoom = ({
   const socketRef = useRef<any>();
   const { isTyping, startTyping, stopTyping, cancelTyping } = useIsTyping();
 
+  const scrollTarget = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!socketRef.current) {
       socketRef.current = io();
@@ -147,6 +149,16 @@ export const ChatRoom = ({
     }
   };
 
+  const scrollToBottom = () => {
+    if (scrollTarget.current) {
+      scrollTarget.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   if (error) {
     return (
       <Box w={"100%"} h={"100vh"}>
@@ -171,7 +183,9 @@ export const ChatRoom = ({
       />
     );
   }
+
   const otherUsers = users.filter((u) => u.socketId !== user.socketId);
+
   return (
     <Container maxW="container.xl" h={"100vh"} p={4}>
       <Grid gridTemplateColumns={"repeat(12, 1fr)"} columnGap={4} h={"100%"}>
@@ -181,6 +195,7 @@ export const ChatRoom = ({
               {messages.map((msg, index) => (
                 <ChatMessage key={index} message={msg} user={user} />
               ))}
+              <Box as="div" ref={scrollTarget} />
             </Box>
             <HStack h={"100px"} spacing={4} mt={4}>
               <Input
