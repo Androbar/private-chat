@@ -7,13 +7,16 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import Cookies from "js-cookie";
+import { User } from "@/types";
 
 export function UserInput({
   userName = "",
+  socketId,
   setUser,
 }: {
   userName: string | undefined;
-  setUser: (user: string) => void;
+  socketId: string | undefined;
+  setUser: (user: User) => void;
 }) {
   const [name, setName] = useState<string>(userName);
 
@@ -22,7 +25,7 @@ export function UserInput({
     if (cleanedName !== "") {
       // set cookie
       Cookies.set("userName", cleanedName);
-      setUser(cleanedName);
+      setUser({ name: cleanedName, socketId });
     }
   };
   return (

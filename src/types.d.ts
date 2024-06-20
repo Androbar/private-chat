@@ -1,4 +1,9 @@
 export type Message = {
-  user: string;
+  user: User;
   message: string;
+};
+
+export type User = {
+  name: string;
+  socketId: string | undefined;
 };

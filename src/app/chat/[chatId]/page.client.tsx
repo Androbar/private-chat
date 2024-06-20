@@ -19,7 +19,7 @@ import { useSearchParams } from "next/navigation";
 import useIsTyping from "@/components/useIsTyping";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { EVENTS } from "@/constants";
-import { Message } from "@/types";
+import { Message, User } from "@/types";
 import { ChatMessage } from "@/components/ChatMessage";
 
 export const ChatRoom = ({
@@ -29,8 +29,8 @@ export const ChatRoom = ({
   chatId: string;
   userName: string | undefined;
 }) => {
-  const [user, setUser] = useState<string>("");
-  const [users, setUsers] = useState<string[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,11 +51,8 @@ export const ChatRoom = ({
   }, [error]);
 
   useEffect(() => {
-    if (!user) {
-      console.log("----------------------------------------");
-      console.log("No user");
-      return;
-    }
+    if (!user) return;
+
     if (!socketRef.current) {
       socketRef.current = io();
     }
@@ -75,7 +72,7 @@ export const ChatRoom = ({
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
 
-    socketRef.current.on(EVENTS.UPDATE_USER_LIST, (users: string[]) => {
+    socketRef.current.on(EVENTS.UPDATE_USER_LIST, (users: User[]) => {
       console.log("User joined:", users);
       setUsers(users);
     });
@@ -99,6 +96,9 @@ export const ChatRoom = ({
         // }
       }
     );
+    socketRef.current.on("disconnect", () => {
+      console.log("User disconnected: " + user.name);
+    });
 
     return () => {
       socketRef.current.disconnect();
@@ -150,8 +150,15 @@ export const ChatRoom = ({
       </Box>
     );
   }
+
   if (!user) {
-    return <UserInput setUser={setUser} userName={userName} />;
+    return (
+      <UserInput
+        setUser={setUser}
+        userName={userName}
+        socketId={socketRef.current?.id}
+      />
+    );
   }
 
   return (
@@ -179,8 +186,8 @@ export const ChatRoom = ({
           <Heading as={"h4"}>Users</Heading>
           {users.map((user, index) => (
             <HStack key={index}>
-              <Text>{user}</Text>
-              {typingUsers.includes(user) && <TypingIndicator />}
+              <Text>{user.name}</Text>
+              {typingUsers.includes(user.name) && <TypingIndicator />}
             </HStack>
           ))}
         </GridItem>

@@ -1,4 +1,4 @@
-import { Message } from "@/types";
+import { Message, User } from "@/types";
 import { Box, Flex, Text } from "@chakra-ui/react";
 
 export function ChatMessage({
@@ -6,13 +6,13 @@ export function ChatMessage({
   user,
 }: {
   message: Message;
-  user: string;
+  user: User;
 }) {
-  const align = message.user === user ? "flex-end" : "flex-start";
+  const align = message.user.name === user.name ? "flex-end" : "flex-start";
   return (
     <Flex direction="column" mb={2} alignItems={align}>
       <Box px={3}>
-        <Text fontSize={"sm"}>{message.user}</Text>
+        <Text fontSize={"sm"}>{message.user.name}</Text>
       </Box>
       <Box
         border={"1px solid #ccc"}
@@ -21,7 +21,7 @@ export function ChatMessage({
         px={3}
         w={"fit-content"}
         m={1}
-        bg={message.user === user ? "#ccc" : "#eee"}
+        bg={message.user.name === user.name ? "#ccc" : "#eee"}
       >
         <Text fontSize={"lg"}>{message.message}</Text>
       </Box>
