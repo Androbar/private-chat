@@ -13,6 +13,7 @@ import {
   Grid,
   GridItem,
   Heading,
+  Divider,
 } from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
 import { useSearchParams } from "next/navigation";
@@ -162,7 +163,7 @@ export const ChatRoom = ({
       />
     );
   }
-
+  const otherUsers = users.filter((u) => u.socketId !== user.socketId);
   return (
     <Container maxW="container.xl" h={"100vh"} p={4}>
       <Grid gridTemplateColumns={"repeat(12, 1fr)"} columnGap={4} h={"100%"}>
@@ -186,7 +187,14 @@ export const ChatRoom = ({
         </GridItem>
         <GridItem colSpan={4}>
           <Heading as={"h4"}>Users</Heading>
-          {users.map((user, index) => (
+          <HStack>
+            <Text>{user.name}</Text>
+            {typingUsers.some((tUser) => tUser.socketId === user.socketId) && (
+              <TypingIndicator />
+            )}
+          </HStack>
+          <Divider />
+          {otherUsers.map((user, index) => (
             <HStack key={index}>
               <Text>{user.name}</Text>
               {typingUsers.some(
