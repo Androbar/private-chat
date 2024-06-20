@@ -90,7 +90,9 @@ export const ChatRoom = ({
       EVENTS.STOP_TYPING,
       (typingInfo: { user: User; room: string; senderId: string }) => {
         setTypingUsers((prevTypingUsers) => {
-          return prevTypingUsers.filter((u) => u !== typingInfo.user);
+          return prevTypingUsers.filter(
+            (tUser) => tUser.socketId !== typingInfo.user.socketId
+          );
         });
         // if (typingInfo.senderId !== socketRef.current.id) {
         // }
