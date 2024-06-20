@@ -13,9 +13,13 @@ import {
 } from "@chakra-ui/react";
 import { io } from "socket.io-client";
 import { EVENTS } from "@/constants";
+import Cookies from "js-cookie";
 
 const HomePage = () => {
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [user, setUser] = useState("");
+  const [userError, setUserError] = useState("");
   const router = useRouter();
   const socketRef = useRef<any>();
 
@@ -27,10 +31,20 @@ const HomePage = () => {
   }, []);
 
   const createChat = () => {
+    if (!password) {
+      setPasswordError("Password is required");
+    }
+    if (!user) {
+      setUserError("Name is required");
+    }
+    if (!user || !password) {
+      return;
+    }
     const chatId = Math.random().toString(36).substring(7);
     socketRef.current.emit(EVENTS.CREATE_ROOM, { room: chatId, password });
+    Cookies.set("userName", user);
 
-    router.push(`/chat/${chatId}?password=${password}`);
+    router.push(`/chat/${chatId}`);
   };
 
   const handleKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -53,12 +67,36 @@ const HomePage = () => {
         </Box>
         <Box maxW={"sm"} mx="auto" mt={5}>
           <Input
-            placeholder="Enter chat password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your name"
+            value={user}
+            onChange={(e) => {
+              setUser(e.target.value);
+              setUserError("");
+            }}
             onKeyDown={handleKeydown}
             m={3}
           />
+          {userError && (
+            <Text mx={3} color="red.500">
+              {userError}
+            </Text>
+          )}
+          <Input
+            placeholder="Enter chat password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setPasswordError("");
+            }}
+            onKeyDown={handleKeydown}
+            m={3}
+          />
+          {passwordError && (
+            <Text mx={3} color="red.500">
+              {passwordError}
+            </Text>
+          )}
+
           <Button onClick={createChat} m={3} w={"100%"}>
             Create Chat
           </Button>

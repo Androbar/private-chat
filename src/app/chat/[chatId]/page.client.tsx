@@ -14,6 +14,7 @@ import {
   GridItem,
   Heading,
   Divider,
+  Spinner,
 } from "@chakra-ui/react";
 import { UserInput } from "@/components/Userinput";
 import { useSearchParams } from "next/navigation";
@@ -42,6 +43,12 @@ export const ChatRoom = ({
   const { isTyping, startTyping, stopTyping, cancelTyping } = useIsTyping();
 
   const scrollTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (socketRef.current && userName) {
+      setUser({ name: userName, socketId: socketRef.current.id });
+    }
+  }, [userName]);
 
   useEffect(() => {
     if (!socketRef.current) {
@@ -174,13 +181,21 @@ export const ChatRoom = ({
     );
   }
 
-  if (!user) {
+  if (!user && !userName) {
     return (
       <UserInput
         setUser={setUser}
+        room={chatId}
         userName={userName}
         socketId={socketRef.current?.id}
       />
+    );
+  }
+  if (!user) {
+    return (
+      <AbsoluteCenter>
+        <Spinner size={"lg"} />{" "}
+      </AbsoluteCenter>
     );
   }
 

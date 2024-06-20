@@ -28,24 +28,19 @@ app.prepare().then(() => {
     });
 
     socket.on(EVENTS.JOIN_ROOM, async ({ room, password, user }) => {
-      const storedPassword = await redis.get(`room:${room}:password`);
-      if (storedPassword === password) {
-        socket.join(room);
-        await redis.sadd(`room:${room}:users`, JSON.stringify(user));
-        socket.emit(EVENTS.JOINED_ROOM, room);
-        socket.to(room).emit(EVENTS.USER_JOINED, user);
+      socket.join(room);
+      await redis.sadd(`room:${room}:users`, JSON.stringify(user));
+      socket.emit(EVENTS.JOINED_ROOM, room);
+      socket.to(room).emit(EVENTS.USER_JOINED, user);
 
-        const messages = await redis.lrange(`room:${room}:messages`, 0, -1);
-        const loadMessages = messages.map(message => JSON.parse(message));
+      const messages = await redis.lrange(`room:${room}:messages`, 0, -1);
+      const loadMessages = messages.map(message => JSON.parse(message));
 
-        socket.emit(EVENTS.LOAD_MESSAGES, loadMessages);
+      socket.emit(EVENTS.LOAD_MESSAGES, loadMessages);
 
-        const users = await redis.smembers(`room:${room}:users`);
-        const parsedUsers = users.map(user => JSON.parse(user));
-        io.to(room).emit(EVENTS.UPDATE_USER_LIST, parsedUsers);
-      } else {
-        socket.emit(EVENTS.ERROR, "Invalid password");
-      }
+      const users = await redis.smembers(`room:${room}:users`);
+      const parsedUsers = users.map(user => JSON.parse(user));
+      io.to(room).emit(EVENTS.UPDATE_USER_LIST, parsedUsers);
     });
 
     // Listen typing events
