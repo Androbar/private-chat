@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 import {
   Box,
   Input,
@@ -24,6 +24,8 @@ import { EVENTS } from "@/constants";
 import { Message, SocketEvents, User } from "@/types";
 import { ChatMessage } from "@/components/ChatMessage";
 
+const socketazo = io();
+
 export const ChatRoom = ({
   chatId,
   userName,
@@ -45,16 +47,14 @@ export const ChatRoom = ({
   const scrollTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (socketRef.current && userName) {
-      setUser({ name: userName, socketId: socketRef.current.id });
+    if (socketazo && userName) {
+      const user: User = { name: userName, socketId: socketazo.id };
+      setUser(user);
     }
-  }, [userName]);
+  }, [userName, socketRef]);
 
   useEffect(() => {
-    if (!socketRef.current) {
-      socketRef.current = io();
-    }
-    socketRef.current.on(EVENTS.ERROR, (err: string) => {
+    socketazo.on(EVENTS.ERROR, (err: string) => {
       setError(err);
     });
   }, [error]);
@@ -62,37 +62,34 @@ export const ChatRoom = ({
   useEffect(() => {
     if (!user) return;
 
-    if (!socketRef.current) {
-      socketRef.current = io();
-    }
-    socketRef.current.emit(EVENTS.JOIN_ROOM, { room: chatId, password, user });
+    socketazo.emit(EVENTS.JOIN_ROOM, { room: chatId, password, user });
 
-    socketRef.current.on(EVENTS.JOINED_ROOM, () => {
+    socketazo.on(EVENTS.JOINED_ROOM, () => {
       console.log("Joined room:", chatId);
     });
 
-    socketRef.current.on(EVENTS.LOAD_MESSAGES, (loadedMessages: Message[]) => {
+    socketazo.on(EVENTS.LOAD_MESSAGES, (loadedMessages: Message[]) => {
       setMessages(loadedMessages);
     });
 
-    socketRef.current.on(EVENTS.MESSAGE, (msg: Message) => {
+    socketazo.on(EVENTS.MESSAGE, (msg: Message) => {
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
 
-    socketRef.current.on(EVENTS.UPDATE_USER_LIST, (users: User[]) => {
+    socketazo.on(EVENTS.UPDATE_USER_LIST, (users: User[]) => {
       setUsers(users);
     });
 
-    socketRef.current.on(
+    socketazo.on(
       EVENTS.START_TYPING,
       (typingInfo: SocketEvents["START_TYPING"]) => {
         setTypingUsers((typingUsers) => [...typingUsers, typingInfo.user]);
-        // if (typingInfo.senderId !== socketRef.current.id) {
+        // if (typingInfo.senderId !== socketazo.id) {
         // }
       }
     );
 
-    socketRef.current.on(
+    socketazo.on(
       EVENTS.STOP_TYPING,
       (typingInfo: SocketEvents["STOP_TYPING"]) => {
         setTypingUsers((prevTypingUsers) => {
@@ -100,33 +97,33 @@ export const ChatRoom = ({
             (tUser) => tUser.socketId !== typingInfo.user.socketId
           );
         });
-        // if (typingInfo.senderId !== socketRef.current.id) {
+        // if (typingInfo.senderId !== socketazo.id) {
         // }
       }
     );
-    socketRef.current.on("disconnect", () => {
+    socketazo.on("disconnect", () => {
       console.log("User disconnected: " + user.name);
     });
 
     return () => {
-      socketRef.current.disconnect();
+      socketazo.disconnect();
     };
   }, [chatId, password, user]);
 
   const startTypingMessage = useCallback(() => {
-    if (!socketRef.current) return;
-    socketRef.current.emit(EVENTS.START_TYPING, {
+    if (!socketazo) return;
+    socketazo.emit(EVENTS.START_TYPING, {
       room: chatId,
-      senderId: socketRef.current.id,
+      senderId: socketazo.id,
       user,
     });
   }, [chatId, user]);
 
   const stopTypingMessage = useCallback(() => {
-    if (!socketRef.current) return;
-    socketRef.current.emit(EVENTS.STOP_TYPING, {
+    if (!socketazo) return;
+    socketazo.emit(EVENTS.STOP_TYPING, {
       room: chatId,
-      senderId: socketRef.current.id,
+      senderId: socketazo.id,
       user,
     });
   }, [chatId, user]);
@@ -146,7 +143,7 @@ export const ChatRoom = ({
 
   const sendMessage = () => {
     if (message.trim() !== "") {
-      socketRef.current.emit(EVENTS.MESSAGE, { room: chatId, user, message });
+      socketazo.emit(EVENTS.MESSAGE, { room: chatId, user, message });
       cancelTyping();
       setMessage("");
     }
@@ -183,7 +180,7 @@ export const ChatRoom = ({
         setUser={setUser}
         room={chatId}
         userName={userName}
-        socketId={socketRef.current?.id}
+        socketId={socketazo?.id}
       />
     );
   }

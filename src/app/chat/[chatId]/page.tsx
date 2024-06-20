@@ -1,3 +1,4 @@
+import { io } from "socket.io-client";
 import { ChatRoom } from "./page.client";
 import { cookies } from "next/headers";
 

@@ -27,6 +27,7 @@ app.prepare().then(() => {
 
     socket.on(EVENTS.JOIN_ROOM, async ({ room, user }: SocketEvents["JOIN_ROOM"]) => {
       socket.join(room);
+      console.log('user is joinging: ', user)
       await redis.sadd(`room:${room}:users`, JSON.stringify(user));
       socket.emit(EVENTS.JOINED_ROOM, room);
       socket.to(room).emit(EVENTS.USER_JOINED, user);
@@ -37,7 +38,7 @@ app.prepare().then(() => {
       socket.emit(EVENTS.LOAD_MESSAGES, loadMessages);
 
       const users = await redis.smembers(`room:${room}:users`);
-      const parsedUsers = users.map(user => JSON.parse(user));
+      const parsedUsers: User[] = users.map(user => JSON.parse(user));
       io.to(room).emit(EVENTS.UPDATE_USER_LIST, parsedUsers);
     });
 
