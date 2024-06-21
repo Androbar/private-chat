@@ -3,16 +3,15 @@ import { parse } from 'url';
 import next from 'next';
 import express from 'express';
 import { Server } from "socket.io";
-import Redis from 'ioredis';
 import { EVENTS } from './src/constants';
 import { SocketEvents, User } from '@/types';
+import redis from './src/utils/redis';
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const port = process.env.PORT || 3000;
-const redis = new Redis();
 
 app.prepare().then(() => {
   const server = express();

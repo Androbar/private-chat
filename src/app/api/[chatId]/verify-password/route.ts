@@ -1,6 +1,4 @@
-import Redis from "ioredis";
-
-const redis = new Redis();
+import redis from "@/utils/redis";
 
 export const POST = async (request: Request, { params }: { params: { chatId: string } }) => {
   const { chatId } = params;
